@@ -1,0 +1,23 @@
+burger_params:
+    lower_bound: 0.0
+    upper_bound: 1.0
+    n_grid_points: 128
+    total_time: 6.0
+    n_steps: 1200
+    viscosity: 0.03
+    u_ref: &repl1 0.5
+    cmin: &repl2 [-10.0, -10.0]
+    cmax: &repl3 [10.0, 10.0]
+    initial_field: 0 #see func_dict in utils module
+
+dmd_params:
+    augstate_trunc: 12
+    output_trunc: 10
+
+mpc_params:
+    prediction_horizon: 10
+    u_ref: *repl1 
+    cmin: *repl2
+    cmax: *repl3
+
+
