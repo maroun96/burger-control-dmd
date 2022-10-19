@@ -143,4 +143,7 @@ control/
 datasets/
 model/
 
+#script to submit experiment
+submit_exp.py
+
 .DS_Store
