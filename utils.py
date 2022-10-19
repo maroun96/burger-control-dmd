@@ -11,19 +11,19 @@ def load_yml(path):
     return cfg
 
 def import_model(dir_name: str):
-    with h5py.File(Path(dir_name) /'model.hdf5') as f:
+    with h5py.File(Path(dir_name) /'model.hdf5', 'r') as f:
         Atilde = f['a_operator_red'][()]
         Btilde = f['b_operator_red'][()]
         Ur = f['pod_modes'][()]
     return Atilde, Btilde, Ur
 
 def import_control(dir_name: str):
-    with h5py.File(Path(dir_name) / 'control.hdf5') as f:
+    with h5py.File(Path(dir_name) / 'control.hdf5', 'r') as f:
         C = f['control_sequence'][()]
     return C 
 
 def merge_data(dataset_path):
-    with h5py.File(dataset_path) as f:
+    with h5py.File(dataset_path, 'r') as f:
         input_arrays = f["input_arrays"].items()
         output_arrays = f["output_arrays"].items()
         control_arrays = f["control_arrays"].items()
