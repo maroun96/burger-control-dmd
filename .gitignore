@@ -142,6 +142,10 @@ log.dat
 control/
 datasets/
 model/
+*.png
+
+#mlflow folders
+mlruns/
 
 #script to submit experiment
 submit_exp.py

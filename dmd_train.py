@@ -28,4 +28,6 @@ if __name__ == "__main__":
     Atilde, Btilde, Ur = DMDc(X.T, Y.T, C.T, p, r)
 
     model_hdf5(dir_name=model_dirname, attr=params, A=Atilde, B=Btilde, Ur=Ur)
+
+    print("DMD Done !")
     

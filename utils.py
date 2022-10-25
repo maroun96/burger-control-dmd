@@ -48,16 +48,10 @@ def merge_data(dataset_path):
     return np.vstack(X), np.vstack(Y), np.vstack(C)
 
 
-def main_hdf5(dir_name: str, attr: dict):
-    dir_path = Path(dir_name)
-    if os.path.exists(dir_path):
-        return
-    else:
-        os.makedirs(dir_path)
-
+def main_hdf5(dir_path: Path, attr: dict, comm):
     hdf5_path = dir_path / 'main.hdf5'
     
-    with h5py.File(hdf5_path, "w") as h5f:
+    with h5py.File(hdf5_path, "w", driver='mpio', comm=comm) as h5f:
         for key, value in attr.items():
             h5f.attrs[key] = value
         h5f.create_group("input_arrays")
