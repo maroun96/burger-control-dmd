@@ -1,21 +1,13 @@
-import argparse
 import numpy as np
 
 from tqdm import tqdm
-from mpc import MPC, MPCTracking
-from utils import import_model, load_yml, control_hdf5, func_dict
+from mpc import MPCTracking
+from utils import  load_yml, func_dict, H5pyHandler
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-mp", "--mpath", type=str, default='model',
-                    help="path of directory that contains the model")
-    parser.add_argument("-cp", "--cpath", type=str, default='control',
-                    help="path of directory that will contain the control sequence")
-    args = parser.parse_args()
-    model_dirname = args.mpath
-    control_dirname = args.cpath
+    iohandler = H5pyHandler(with_control=True)
 
-    Atilde, Btilde, Ur = import_model(model_dirname)
+    Atilde, Btilde, Ur = iohandler.import_model()
 
     A = np.linalg.multi_dot([Ur, Atilde, Ur.T.conj()])
     B = np.linalg.multi_dot([Ur, Btilde])
@@ -43,7 +35,7 @@ if __name__ == "__main__":
         controls.append(control)
     
     C = np.array(controls)
-    control_hdf5(control_dirname, attr=mpc_params, C=C)
+    iohandler.control_hdf5(attr=mpc_params, C=C)
 
 
     

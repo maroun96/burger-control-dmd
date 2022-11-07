@@ -147,7 +147,7 @@ model/
 #mlflow folders
 mlruns/
 
-#script to submit experiment
-submit_exp.py
+#scripts to submit experiment
+submit*.py
 
 .DS_Store

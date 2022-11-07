@@ -12,7 +12,7 @@ def DMD(X,Xprime,r):
     Phi = Xprime @ np.linalg.solve(Sigmar.T,VTr).T @ W # Step 4
     # alpha1 = Sigmar @ VTr[:,0]
     # b = np.linalg.solve(W @ Lambda,alpha1)
-    return Phi, Lambda
+    return Atilde, Ur
 
 def DMDc(X, Xprime, C, p, r):
     Omega = np.concatenate((X, C), axis=0)

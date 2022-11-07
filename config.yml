@@ -11,8 +11,8 @@ burger_params:
     initial_field: 0 #see func_dict in utils module
 
 dmd_params:
-    augstate_trunc: 12
-    output_trunc: 10
+    augstate_trunc: 22
+    output_trunc: 20
 
 mpc_params:
     prediction_horizon: 10

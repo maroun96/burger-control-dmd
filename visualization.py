@@ -4,15 +4,19 @@ import mlflow
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import import_model, import_control, load_yml, func_dict
+from utils import  load_yml, func_dict, H5pyHandler
 from burger_env import BurgerEnv
 
 class Visu:
-    def __init__(self, model_path: str, control_path: str, burger_env: BurgerEnv):
-        Atilde, Btilde, Ur = import_model(model_path)
+    def __init__(self, iohandler: H5pyHandler, burger_env: BurgerEnv):
+        self.iohandler = iohandler
+        if self.iohandler.with_control:
+            Atilde, Btilde, Ur = self.iohandler.import_model()
+            self._B = np.linalg.multi_dot([Ur, Btilde])
+            self._C = iohandler.import_control()
+        else:
+            Atilde, Ur = self.iohandler.import_model()
         self._A = np.linalg.multi_dot([Ur, Atilde, Ur.T.conj()])
-        self._B = np.linalg.multi_dot([Ur, Btilde])
-        self._C = import_control(control_path)
         self._burger_env = burger_env
     
     @property
@@ -21,10 +25,12 @@ class Visu:
     
     @property
     def B(self):
+        self.control_exception()
         return self._B
     
     @property
     def C(self):
+        self.control_exception()
         return self._C
 
     @property
@@ -53,6 +59,7 @@ class Visu:
         return U_dmd
     
     def ctr_sim(self, control_seq = None):
+        self.control_exception()
         if control_seq is None:
             control_seq = self.C
         u_init = self.burger_env.initial_field
@@ -64,6 +71,7 @@ class Visu:
         return U_num
     
     def ctr_dmd(self, control_seq = None):
+        self.control_exception()
         if control_seq is None:
             control_seq = self.C
         u_init = self.burger_env.initial_field
@@ -103,6 +111,7 @@ class Visu:
         return fig, mse
     
     def plot_ctr(self, control_seq = None):
+        self.control_exception()
         uref = self.burger_env.u_ref
         U_num = self.ctr_sim(control_seq=control_seq)
         U_dmd = self.ctr_dmd(control_seq=control_seq)
@@ -133,6 +142,7 @@ class Visu:
         return fig1, fig2, tracking_erros_num, tracking_erros_dmd
     
     def plot_opt_ctr(self):
+        self.control_exception()
         fig, ax = plt.subplots(figsize = (10, 10))
         fontsize = 15
         c1 = self.C[:, 0]
@@ -146,6 +156,10 @@ class Visu:
         fig.suptitle("Optimal control sequence", fontsize=fontsize)
 
         return fig
+    
+    def control_exception(self):
+        if not self.iohandler.with_control:
+            raise Exception("Model trained without control")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -168,7 +182,9 @@ if __name__ == "__main__":
     cfunc_list = [lambda x: np.exp(-(15*(x-0.25))**2), lambda x: np.exp(-(15*(x-0.75))**2)]
     burger_env = BurgerEnv(params=params,initial_func=initial_func, cfunc_list=cfunc_list)
 
-    visu = Visu("model", "control", burger_env)
+    iohandler = H5pyHandler(with_control=True)
+
+    visu = Visu(iohandler=iohandler,burger_env=burger_env)
 
     with mlflow.start_run(run_id=run_id):
         unctr_fig, mse = visu.plot_unctr()
