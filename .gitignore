@@ -150,4 +150,7 @@ mlruns/
 #scripts to submit experiment
 submit*.py
 
+#config files
+config.yml
+
 .DS_Store
