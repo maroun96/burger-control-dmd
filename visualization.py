@@ -167,10 +167,13 @@ if __name__ == "__main__":
                     help="Name of the experiment for mlflow tracking")
     parser.add_argument("-id", "--runid", type=str, required=True, 
                     help="Mlflow run id")
+    parser.add_argument('--control', default=True, 
+                    action=argparse.BooleanOptionalAction)
     args = parser.parse_args()
 
     experiment_name = args.name
     run_id = args.runid
+    control_bool = args.control
 
     mlflow.set_experiment(experiment_name=experiment_name)
 
@@ -182,7 +185,7 @@ if __name__ == "__main__":
     cfunc_list = [lambda x: np.exp(-(15*(x-0.25))**2), lambda x: np.exp(-(15*(x-0.75))**2)]
     burger_env = BurgerEnv(params=params,initial_func=initial_func, cfunc_list=cfunc_list)
 
-    iohandler = H5pyHandler(with_control=True)
+    iohandler = H5pyHandler(with_control=control_bool)
 
     visu = Visu(iohandler=iohandler,burger_env=burger_env)
 
@@ -190,14 +193,15 @@ if __name__ == "__main__":
         unctr_fig, mse = visu.plot_unctr()
         mlflow.log_figure(unctr_fig, "num_dmd_unctr.png")
         mlflow.log_metric(key="Mean squared error", value=mse)
-        ctr_num_fig, ctr_dmd_fig, tracking_errors_num, tracking_errors_dmd = visu.plot_ctr()
-        mlflow.log_figure(ctr_num_fig, "ctr_num.png")
-        mlflow.log_figure(ctr_dmd_fig, "ctr_dmd.png")
-        for i, (error_num, error_dmd) in enumerate(zip(tracking_errors_num, tracking_errors_dmd)):
-            mlflow.log_metric(key="Tracking error num", value=error_num, step=i)
-            mlflow.log_metric(key="Tracking error dmd", value=error_dmd, step=i)
-        opt_ctr_fig = visu.plot_opt_ctr()
-        mlflow.log_figure(opt_ctr_fig, "opt_ctr.png")
+        if control_bool:
+            ctr_num_fig, ctr_dmd_fig, tracking_errors_num, tracking_errors_dmd = visu.plot_ctr()
+            mlflow.log_figure(ctr_num_fig, "ctr_num.png")
+            mlflow.log_figure(ctr_dmd_fig, "ctr_dmd.png")
+            for i, (error_num, error_dmd) in enumerate(zip(tracking_errors_num, tracking_errors_dmd)):
+                mlflow.log_metric(key="Tracking error num", value=error_num, step=i)
+                mlflow.log_metric(key="Tracking error dmd", value=error_dmd, step=i)
+            opt_ctr_fig = visu.plot_opt_ctr()
+            mlflow.log_figure(opt_ctr_fig, "opt_ctr.png")
 
 
 

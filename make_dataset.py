@@ -10,6 +10,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--control', default=True, 
                     action=argparse.BooleanOptionalAction)
+    parser.add_argument('--append', default=False, 
+                    action=argparse.BooleanOptionalAction)
+    parser.add_argument('-s','--sampling', required=False, type=str, default="random", 
+                    help="sampling strategy", choices=["random", "zero"])
     args = parser.parse_args()
 
     comm = MPI.COMM_WORLD
@@ -17,8 +21,10 @@ if __name__ == "__main__":
     
     seed = rank 
     control_bool = args.control
+    sampling_strategy = args.sampling
+    append_bool = args.append
 
-    iohandler = H5pyHandler(with_control=control_bool, mpi_comm=comm)
+    iohandler = H5pyHandler(with_control=control_bool, mpi_comm=comm, append=append_bool)
 
     if not control_bool:
         print("No control")
@@ -28,7 +34,8 @@ if __name__ == "__main__":
     cfg = load_yml("config.yml")
     params = cfg["burger_params"]
 
-    iohandler.main_hdf5(attr=params)
+    if not append_bool:
+        iohandler.main_hdf5(attr=params)
     
 
     func_key = params["initial_field"]
@@ -38,6 +45,7 @@ if __name__ == "__main__":
 
     cmin = burger_env.action_space.low
     cmax = burger_env.action_space.high
+    nc = burger_env.action_shape[0]
 
     X = []
     Y = []
@@ -50,10 +58,13 @@ if __name__ == "__main__":
     while True:
         X.append(np.copy(u))
         if control_bool:
-            control = np.random.random(2)*(cmax-cmin) + cmin
+            if sampling_strategy == "random":
+                control = np.random.random(nc)*(cmax-cmin) + cmin
+            elif sampling_strategy == "zero":
+                control = np.zeros(nc)
             C.append(control)
         else:
-            control = np.zeros(2)
+            control = np.zeros(nc)
         u, _, done, _ = burger_env.step(control)
         Y.append(np.copy(u))
         if done:

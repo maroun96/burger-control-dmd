@@ -11,11 +11,18 @@ class H5pyHandler:
     model_dirname = "model"
     control_dirname = "control"
 
-    def __init__(self, with_control: bool, mpi_comm = None):
+    def __init__(self, with_control: bool, mpi_comm = None, append = False):
         self.with_control = with_control
         self.mpi_comm = mpi_comm
+        self.append = append
+
+        if self.append:
+            self.current_idx = self._get_data_idx() + 1
+        else:
+            self.current_idx = 0
     
     def main_hdf5(self, attr: dict):
+        assert not self.append
         rank = self.mpi_comm.Get_rank()
         dir_path = Path(os.path.dirname(__file__)) / self.main_dirname
         if rank == 0:
@@ -39,7 +46,7 @@ class H5pyHandler:
         with h5py.File(dir_path / "main.hdf5", 'a', driver='mpio', comm=self.mpi_comm) as f:
             dset = []
             grp = f[group_name]
-            for i in range(size):
+            for i in range(self.current_idx, size + self.current_idx):
                 dset.append(grp.create_dataset(f'{group_name[:-1]}{i}', shape=data.shape, dtype=data.dtype))
             dset[rank][:] = data
     
@@ -91,7 +98,15 @@ class H5pyHandler:
         dir_path = Path(os.path.dirname(__file__)) / self.control_dirname
         with h5py.File(dir_path/ 'control.hdf5', 'r') as f:
             C = f['control_sequence'][:]
-        return C 
+        return C
+
+    def _get_data_idx(self):
+        dir_path = Path(os.path.dirname(__file__)) / self.main_dirname
+        with h5py.File(dir_path / "main.hdf5", 'r') as f:
+            input_arrays = f["input_arrays"]
+            last_array_key = list(input_arrays.keys())[-1][-1]
+        return int(last_array_key)
+
 
     def assert_grpname(self, group_name):
         assert group_name in ["input_arrays", "output_arrays", "control_arrays"]
